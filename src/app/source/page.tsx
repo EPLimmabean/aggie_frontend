@@ -10,22 +10,22 @@ import {
   Image,
   Form
 } from "react-bootstrap";
-import StatsBar from '../_components/StatsBar';
-import ConfirmModal from "../_components/ConfirmModal";
-import SourceModal from "../_components/source/SourceModal";
+import StatsBar from '../../components/StatsBar';
+import ConfirmModal from "../../components/ConfirmModal";
+import SourceModal from "../../components/source/SourceModal";
 import {capitalizeFirstLetter} from "../../helpers";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import { useParams } from 'next/navigation';
 import {editSource, getSource} from "../api/sources";
-import {useParams} from "react-router-dom";
 import {Credential, Source, SourceEvent} from "../../objectTypes";
 import {getCredentials} from "../api/credentials";
 
 const SourceDetails = () => {
-  let { id } = useParams<{id: string}>();
-  const queryClient = useQueryClient();
-  const sourceQuery = useQuery(["source", id], () => getSource(id));
-  const credentialsQuery = useQuery<Credential[] | undefined>("credentials", getCredentials);
-  const sourceMutation = useMutation((sourceData: any) => {return editSource(sourceData)});
+  const params = useParams();
+  const sourceID = Array.isArray(params.id) ? params.id[0] : params.id; // if array the take the first one
+  const sourceQuery = useQuery({queryKey: ["source", sourceID], queryFn: () => getSource(sourceID)});
+  const credentialsQuery = useQuery<Credential[] | undefined>({queryKey: ["credentials"], queryFn: getCredentials});
+  const sourceMutation = useMutation({mutationFn: (sourceData: any) => {return editSource(sourceData)}});
   const handleChange = (source: Source | null) => {
     if (source) {
       source.enabled = !source.enabled;

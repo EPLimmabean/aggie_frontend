@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Card, Col, Container, Row, Form} from "react-bootstrap";
-import ExportCSVModal from "../_components/configuration/ExportCSVModal";
+import ExportCSVModal from "../../components/configuration/ExportCSVModal";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {getEmailSettings, getFetchStatus, putFetchingStatus} from "../api/configuration";
 
@@ -10,18 +10,13 @@ interface IProps {
 const Configuration = () => {
   const [fetchStatus, setFetchStatus] = useState<boolean>(false);
   const [appEmail, setAppEmail] = useState("");
-  const emailSettingsQuery = useQuery("emailSettings", getEmailSettings,{
-    onSuccess: data => {console.log(data)}
-  });
-  const fetchStatusQuery = useQuery("fetchStatus", getFetchStatus, {
-    onSuccess: data => {if (data.fetching) {setFetchStatus(data.fetching)}}
-  });
-  const fetchStatusMutation = useMutation((fetching: boolean) => {return putFetchingStatus(fetching)}, {
-    onSuccess: () => {
-      setFetchStatus(!fetchStatus)
-      console.log("Fetching is on: " + !fetchStatus )
-    }
-  });
+  const emailSettingsQuery = useQuery({queryKey: ["emailSettings"], queryFn: getEmailSettings});
+  if (emailSettingsQuery.isSuccess) { console.log(emailSettingsQuery.data) }
+
+  const fetchStatusQuery = useQuery({queryKey: ["fetchStatus"], queryFn: getFetchStatus});
+  if (fetchStatusQuery.isSuccess && fetchStatusQuery.data.fetching) {setFetchStatus(fetchStatusQuery.data.fetching)}} }
+  const fetchStatusMutation = useMutation({ mutationKey: ["fetchStatus"], mutationFn: async (fetching: boolean) => {return putFetchingStatus(fetching)} }
+  if 
 
   return (
       <div>
