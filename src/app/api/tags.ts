@@ -2,21 +2,17 @@ import axios from "axios";
 import {Tag, TagEditableData} from "../../objectTypes";
 
 export const getTags = async () => {
-  const { data } = await axios.get('/api/tag');
-  return data;
+  return await axios.get('/api/tag');
 }
 
 export const newTag = async (tag: TagEditableData) => {
-  const { data } = await axios.post('/api/tag/', tag);
-  return data;
+  return await axios.post('/api/tag/', tag);
 }
 
 export const editTag = async (tag: TagEditableData) => {
-  const { data } = await axios.put('/api/tag/' + tag._id, tag);
-  return data;
+  return await axios.put('/api/tag/' + tag._id, tag);
 }
 
 export const deleteTag = async (tag: Tag) => {
-  const { data } = await axios.delete('/api/tag/' + tag._id);
-  return data;
+  return await axios.delete('/api/tag/' + tag._id);
 }

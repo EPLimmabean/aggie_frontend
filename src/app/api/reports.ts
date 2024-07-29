@@ -39,8 +39,8 @@ export const cancelBatch = async () => {
 }
 
 export const setSelectedRead = async (reportIds: string[], read = true) => {
-  const { data } = await axios.patch('/api/report/_read', {ids: reportIds, read: read});
-  return data;
+  const response = await axios.patch('/api/report/_read', {ids: reportIds, read: read});
+  return response;
 }
 
 export const setSelectedVeracity = async (reportIds: string[], veracity: VeracityOptions | string ) => {

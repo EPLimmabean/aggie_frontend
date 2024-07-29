@@ -30,6 +30,7 @@ import { Field, Formik, Form } from "formik";
 import Tags from "@yaireo/tagify/dist/react.tagify";
 
 const ITEMS_PER_PAGE = 50;
+const ERROR_RESPONSE_DATA_NOT_STRING =  "Error response not returned as string";
 
 interface IProps {
   reports: Report[],
@@ -117,7 +118,7 @@ export default function EditGroupModal(props: IProps) {
         setShowAlert(false);
         setAlertMessage({
           header: "Failed to update group status " + error.response.status,
-          body: error.response.data,
+          body: typeof error.response.data === "string" ?  error.response.data : ERROR_RESPONSE_DATA_NOT_STRING,
         });
         setShowAlert(true);
       } else {

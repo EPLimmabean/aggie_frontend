@@ -1,7 +1,7 @@
 import React, {ChangeEvent, Component, useEffect, useState} from 'react';
 import  {AxiosError} from 'axios';
 import {Container, Col, Row, Card, Table, Form, ButtonToolbar, Button, Alert} from "react-bootstrap";
-import StatsBar from '../_components/StatsBar';
+import StatsBar from '../../components/StatsBar';
 import { Tweet } from "react-twitter-widgets";
 import {
   tagsById,
@@ -17,8 +17,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import {Link, useNavigate, useParams} from "react-router-dom";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import Link from 'next/link';
+import { redirect, useParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getReport,
   setSelectedEscalated,
@@ -63,7 +64,6 @@ interface TagsUpdateInfo {
 
 const ReportDetails = () => {
   let { id } = useParams<{id: string}>();
-  const queryClient = useQueryClient();
   const [escalated, setEscalated] = useState<boolean>(false);
   const [veracity, setVeracity] = useState<VeracityOptions | string>("Unconfirmed");
   const [notes, setNotes] = useState("");
@@ -74,14 +74,10 @@ const ReportDetails = () => {
   const handleEscalatedChange = (event: React.ChangeEvent<HTMLInputElement>) => setEscalated(event.target.checked);
   const handleVeracityChange = (event: React.ChangeEvent<HTMLSelectElement>) => setVeracity(event.target.value);
   const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => setNotes(event.target.value);
-  const navigate = useNavigate();
-  const readStatusMutation = useMutation((readUpdateInfo: ReadUpdateInfo) => {
+  const readStatusMutation = useMutation<Report | AxiosError>({mutationKey: ["report", id], mutationFn: (readUpdateInfo: ReadUpdateInfo) => {
     return setSelectedRead([readUpdateInfo.reportId], readUpdateInfo.read);
-  }, {
-    onSuccess: data => {
-      // TODO: Instead of refetching, just use a React useState to adjust the UI on Success
-      reportQuery.refetch();
-    },
+  }});
+  if (readStatusMutation.isError && readStatusMutation.error. && ) {}
     onError: (error: AxiosError) => {
       if (error.response && error.response.status === 401) {
         navigate('/login');

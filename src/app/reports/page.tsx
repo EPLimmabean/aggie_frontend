@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -27,7 +27,7 @@ import StatsBar from "../../components/StatsBar";
 import { AlertContent } from "../../components/AlertService";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { redirect, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cancelBatch,
@@ -97,10 +97,8 @@ interface IProps {
 let socket: Socket;
 
 const ReportsIndex = (props: IProps) => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   // This is the state of the URL
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   // This is whether batch mode is on or not
   const [batchMode, setBatchMode] = useState(
     searchParams.get("batch") === "true" || false
@@ -150,63 +148,29 @@ const ReportsIndex = (props: IProps) => {
       page: pageNum,
     });
   };
-  const newBatchMutation = useMutation(getNewBatch, {
-    onSuccess: (data) => {
-      batchQuery.refetch();
-    },
-    onError: (error: AxiosError) => {
-      console.error(error);
-    },
-  });
-  const cancelBatchMutation = useMutation(cancelBatch, {
-    onError: (error: AxiosError) => {
-      console.error(error);
-    },
-  });
-  const setSelectedReadMutation = useMutation((reportIds: string[]) =>
-    setSelectedRead(reportIds)
-  );
+  const newBatchMutation = useMutation({mutationKey: ["batch"], mutationFn: getNewBatch});
+  if (newBatchMutation.isError) {console.error(newBatchMutation.error)}
+  const cancelBatchMutation = useMutation({mutationKey: ["batch"], mutationFn: cancelBatch})
+  if (cancelBatchMutation.isError) {console.error(console.error(cancelBatchMutation.error))}
+  const setSelectedReadMutation = useMutation({mutationKey: ["reports"], mutationFn: (reportIds: string[]) => setSelectedRead(reportIds)});
   // Querying data
   // This is the batch query, it normally remains disabled until the batch mode is activated.
 
-  const batchQuery = useQuery<Reports | undefined, AxiosError>(
-    "batch",
-    () => getBatch(),
-    {
-      enabled: batchMode,
-      onSuccess: (data) => {
-        if (data && data.total === 0) {
-          // If this is true either we have no reports left, or the user has not checked out a batch
-          newBatchMutation.mutate();
-        }
-      },
-      onError: (err: AxiosError) => {
-        if (err.response && err.response.status === 401) {
-          navigate("/login");
-        }
-      },
-    }
-  );
+  const batchQuery = useQuery<Reports | undefined, AxiosError>({queryKey: ["batch"], queryFn: getBatch, enabled: batchMode});
+  if (batchQuery.isSuccess && batchQuery.data && batchQuery.data.total === 0) { newBatchMutation.mutate(); }
+  if (batchQuery.isError && batchQuery.error.response && batchQuery.error.response.status === 401) { redirect("/login") };
   let sessionFetching = true;
-  const sessionQuery = useQuery<Session | undefined, AxiosError>(
-    "session",
-    getSession,
-    {
-      onError: (err: AxiosError) => {
-        if (err.response && err.response.status === 401) {
-          sessionFetching = false;
-          navigate("/login");
-        }
-      },
+  const sessionQuery = useQuery<Session | undefined, AxiosError>({queryKey: ["session"], queryFn: getSession, retry: sessionFetching})
+  if (sessionQuery.isError && sessionQuery.error.response && sessionQuery.error.response.status === 401) {
+    sessionFetching = false;
+    redirect("/login");
+  }
       onSuccess: (data) => {
         sessionFetching = true;
         if (location.pathname === "/login") {
           navigate("/reports");
         }
-      },
-      retry: sessionFetching,
-    }
-  );
+
   const reportsQuery = useQuery<Reports | undefined, AxiosError>(
     [
       "reports",
@@ -236,33 +200,19 @@ const ReportsIndex = (props: IProps) => {
       },
     }
   );
-  const ctListsQuery = useQuery<CTList | undefined, AxiosError>(
-    "ctLists",
-    getCTLists,
-    {
-      onError: (err: AxiosError) => {
-        if (err.response && err.response.status === 401) {
-          navigate("/login");
-        }
-      },
+  const ctListsQuery = useQuery<CTList | undefined, AxiosError>({queryKey: ["ctLists"], queryFn: getCTLists});
+  if (ctListsQuery.error?.response && ctListsQuery.error?.response.status === 401) { redirect("/login"); }
+  const tagsQuery = useQuery<Tag[] | undefined, AxiosError>({queryKey: ["tags"], queryFn: getTags});
+  if (tagsQuery.error?.response && tagsQuery.error.response.status === 401) { redirect("/login");}
+  if (tagsQuery.isSuccess) {
+    let tagsString = searchParams.get("tags");
+    let tagsArray: string[] = [];
+    if (tagsString) {
+      tagsArray = tagsString.split(",");
+      //@ts-ignore
+      setFilterTags(tagsById(tagsArray, data));
     }
-  );
-  const tagsQuery = useQuery("tags", getTags, {
-    onError: (err: AxiosError) => {
-      if (err.response && err.response.status === 401) {
-        navigate("/login");
-      }
-    },
-    onSuccess: (data: Tag[]) => {
-      let tagsString = searchParams.get("tags");
-      let tagsArray: string[] = [];
-      if (tagsString) {
-        tagsArray = tagsString.split(",");
-        //@ts-ignore
-        setFilterTags(tagsById(tagsArray, data));
-      }
-    },
-  });
+  }
   const selectedReadStatusMutation = useMutation(
     (read: boolean) => {
       let selectedReportIdsArr = Array.from(selectedReportIds);

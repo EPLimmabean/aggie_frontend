@@ -1,5 +1,5 @@
 import axios from "axios";
-import {Credential} from "../objectTypes";
+import {Credential} from "../../objectTypes";
 export const getCredentials = async () => {
   const { data } = await axios.get('/api/credential');
   return data;

@@ -1,14 +1,13 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {Container, Col, Row, Card, Form, Button, Image, Alert, InputGroup} from "react-bootstrap";
 import {Formik, FormikValues} from "formik";
-import axios from "axios";
 import * as Yup from "yup";
-import {LoginData} from "../objectTypes";
+import {LoginData} from "../../objectTypes";
 import {logIn} from "../api/session";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 const loginFormSchema = Yup.object().shape({
   loginUsername: Yup.string().required('Username required'),
